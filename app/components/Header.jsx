@@ -1,13 +1,14 @@
-import {Suspense} from 'react';
-import {Await, NavLink} from '@remix-run/react';
-import {useAnalytics} from '@shopify/hydrogen';
-import {useAside} from '~/components/Aside';
+import { Suspense } from 'react';
+import { Await, NavLink } from '@remix-run/react';
+import { useAnalytics } from '@shopify/hydrogen';
+import { useAside } from '~/components/Aside';
 
 /**
  * @param {HeaderProps}
  */
-export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
-  const {shop, menu} = header;
+export function Header({ header, isLoggedIn, cart, publicStoreDomain }) {
+  console.log('Header props:', { header, isLoggedIn, cart, publicStoreDomain });
+  const { shop, menu } = header;
   return (
     <header className="header">
       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
@@ -38,6 +39,7 @@ export function HeaderMenu({
   viewport,
   publicStoreDomain,
 }) {
+  //console.log('HeaderMenu props:', { menu, primaryDomainUrl, viewport, publicStoreDomain });
   const className = `header-menu-${viewport}`;
 
   function closeAside(event) {
@@ -61,6 +63,7 @@ export function HeaderMenu({
         </NavLink>
       )}
       {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
+       // console.log('Menu item:', item);
         if (!item.url) return null;
 
         // if the url is internal, we strip the domain
@@ -70,6 +73,9 @@ export function HeaderMenu({
           item.url.includes(primaryDomainUrl)
             ? new URL(item.url).pathname
             : item.url;
+            // console.log(`🚀 ~ file: Header.jsx:71 ~ { ~ url:`, url)
+            // console.log('publicStoreDomain', publicStoreDomain);
+            // console.log('primaryDomainUrl', primaryDomainUrl);
         return (
           <NavLink
             className="header-menu-item"
@@ -91,14 +97,18 @@ export function HeaderMenu({
 /**
  * @param {Pick<HeaderProps, 'isLoggedIn' | 'cart'>}
  */
-function HeaderCtas({isLoggedIn, cart}) {
+function HeaderCtas({ isLoggedIn, cart }) {
+  //console.log('HeaderCtas props:', { isLoggedIn, cart });
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         <Suspense fallback="Sign in">
           <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
+            {(isLoggedIn) => {
+              //console.log('isLoggedIn:', isLoggedIn);
+              return isLoggedIn ? 'Account' : 'Sign in';
+            }}
           </Await>
         </Suspense>
       </NavLink>
@@ -109,7 +119,7 @@ function HeaderCtas({isLoggedIn, cart}) {
 }
 
 function HeaderMenuMobileToggle() {
-  const {open} = useAside();
+  const { open } = useAside();
   return (
     <button
       className="header-menu-mobile-toggle reset"
@@ -121,7 +131,7 @@ function HeaderMenuMobileToggle() {
 }
 
 function SearchToggle() {
-  const {open} = useAside();
+  const { open } = useAside();
   return (
     <button className="reset" onClick={() => open('search')}>
       Search
@@ -130,11 +140,12 @@ function SearchToggle() {
 }
 
 /**
- * @param {{count: number | null}}
+ * @param {{ count: number | null }}
  */
-function CartBadge({count}) {
-  const {open} = useAside();
-  const {publish, shop, cart, prevCart} = useAnalytics();
+function CartBadge({ count }) {
+  //console.log('CartBadge props:', { count });
+  const { open } = useAside();
+  const { publish, shop, cart, prevCart } = useAnalytics();
 
   return (
     <a
@@ -158,11 +169,13 @@ function CartBadge({count}) {
 /**
  * @param {Pick<HeaderProps, 'cart'>}
  */
-function CartToggle({cart}) {
+function CartToggle({ cart }) {
+  //console.log('CartToggle props:', { cart });
   return (
     <Suspense fallback={<CartBadge count={null} />}>
       <Await resolve={cart}>
         {(cart) => {
+         // console.log('cart:', cart);
           if (!cart) return <CartBadge count={0} />;
           return <CartBadge count={cart.totalQuantity || 0} />;
         }}
@@ -219,7 +232,7 @@ const FALLBACK_HEADER_MENU = {
  *   isPending: boolean;
  * }}
  */
-function activeLinkStyle({isActive, isPending}) {
+function activeLinkStyle({ isActive, isPending }) {
   return {
     fontWeight: isActive ? 'bold' : undefined,
     color: isPending ? 'grey' : 'black',

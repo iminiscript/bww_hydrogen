@@ -76,6 +76,7 @@ export default function Homepage() {
  * }}
  */
 function FeaturedCollection({collection}) {
+  console.log(`🚀 ~ file: ($locale)._index.jsx:79 ~ FeaturedCollection ~ collection:`, collection)
   if (!collection) return null;
   const image = collection?.image;
   return (
@@ -99,6 +100,7 @@ function FeaturedCollection({collection}) {
  * }}
  */
 function RecommendedProducts({products}) {
+  console.log(`🚀 ~ file: ($locale)._index.jsx:103 ~ RecommendedProducts ~ products:`, products)
   return (
     <div className="recommended-products">
       <h2>Recommended Products</h2>
@@ -168,7 +170,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
         currencyCode
       }
     }
-    images(first: 1) {
+    images(first: 10) {
       nodes {
         id
         url
@@ -180,7 +182,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   }
   query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
+    products(first: 10, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...RecommendedProduct
       }
