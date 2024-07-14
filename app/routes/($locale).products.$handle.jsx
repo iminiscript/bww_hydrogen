@@ -10,6 +10,10 @@ import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
+import {PortableText} from '@portabletext/react';
+import {groq} from 'hydrogen-sanity/groq';
+//import type { SanityDocument } from '@sanity/client';
+
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -38,17 +42,23 @@ export async function loader(args) {
  */
 async function loadCriticalData({context, params, request}) {
   const {handle} = params;
-  const {storefront} = context;
+  const {storefront, sanity} = context;
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
 
-  const [{product}] = await Promise.all([
+  const [{product}, initial] = await Promise.all([
     storefront.query(PRODUCT_QUERY, {
       variables: {handle, selectedOptions: getSelectedProductOptions(request)},
     }),
-    // Add other queries here, so that they are loaded in parallel
+    sanity.loadQuery(
+      groq`*[_type == "product" && store.slug.current == $handle][0]{body, "image": store.previewImageUrl}`,
+      params
+    ).catch((error) => {
+      console.error(error);
+      return null;
+    })
   ]);
 
   if (!product?.id) {
@@ -74,6 +84,7 @@ async function loadCriticalData({context, params, request}) {
 
   return {
     product,
+    initial,
   };
 }
 
@@ -129,7 +140,7 @@ function redirectToFirstVariant({product, request}) {
 
 export default function Product() {
   /** @type {LoaderReturnData} */
-  const {product, variants} = useLoaderData();
+  const {product, variants, initial} = useLoaderData();
   const selectedVariant = useOptimisticVariant(
     product.selectedVariant,
     variants,
@@ -177,6 +188,21 @@ export default function Product() {
         <br />
         <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
         <br />
+        <div>
+          {initial?.data?.body?.length > 0 && (
+            <PortableText value={initial.data.body} />
+          )}
+          {initial?.data?.image && (
+            <img
+              alt={product.title}
+              src={initial.data.image}
+              className="size-32 not-prose mb-6 mr-6 object-cover float-left rounded-xl"
+            />
+          )}
+        </div>
+        <p>
+          <Link to="/products">&larr; Back to All Products</Link>
+        </p>
       </div>
       <Analytics.ProductView
         data={{

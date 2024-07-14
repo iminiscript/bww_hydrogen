@@ -35,6 +35,10 @@ declare global {
     PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
     PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
     PUBLIC_CHECKOUT_DOMAIN: string;
+    SANITY_PROJECT_ID: string;
+    SANITY_DATASET: string;
+    SANITY_API_VERSION: string;
+    SANITY_API_TOKEN: string;
   }
 
   /**

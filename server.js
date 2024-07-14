@@ -8,6 +8,7 @@ import {
   createStorefrontClient,
   storefrontRedirect,
   createCustomerAccountClient,
+  createWithCache,
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
@@ -15,6 +16,7 @@ import {
 } from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+import {createSanityLoader} from 'hydrogen-sanity'
 
 /**
  * Export a fetch handler in module format.
@@ -35,6 +37,7 @@ export default {
       }
 
       const waitUntil = executionContext.waitUntil.bind(executionContext);
+  
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
         AppSession.init(request, [env.SESSION_SECRET]),
@@ -53,6 +56,7 @@ export default {
         storefrontId: env.PUBLIC_STOREFRONT_ID,
         storefrontHeaders: getStorefrontHeaders(request),
       });
+
 
       /**
        * Create a client for Customer Account API.
@@ -77,6 +81,23 @@ export default {
         cartQueryFragment: CART_QUERY_FRAGMENT,
       });
 
+
+      const withCache = createWithCache({cache, waitUntil, request});
+      
+      const sanity = createSanityLoader({
+        // Required:
+        withCache,
+        
+        // Required:
+        // Pass configuration options for Sanity client or an instantialized client
+        client: {
+          projectId: env.SANITY_PROJECT_ID,
+          dataset: env.SANITY_DATASET,
+          apiVersion: env.SANITY_API_VERSION || '2023-03-30',
+          useCdn: process.env.NODE_ENV === 'production',
+        },
+      })
+
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
@@ -91,6 +112,8 @@ export default {
           cart,
           env,
           waitUntil,
+          withCache,
+          sanity,
         }),
       });
 
